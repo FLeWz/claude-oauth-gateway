@@ -208,7 +208,7 @@ def normalize_input_schema(schema):
     nullable unions. The host normalizes both in ``agent.anthropic_message_convert``, but only for
     ``api_mode='messages'``; this transport is ``chat_completions``, so mirror it here. The
     combinators are advisory (handlers re-validate their arguments); nested unions stay untouched."""
-    from tools.schema_sanitizer import strip_nullable_unions
+    from app.runtime.schema_sanitizer import strip_nullable_unions
     normalized = strip_nullable_unions(schema, keep_nullable_hint=False)
     if any(key in normalized for key in _BANNED_TOP_LEVEL):
         normalized = {k: v for k, v in normalized.items() if k not in _BANNED_TOP_LEVEL}
@@ -287,7 +287,7 @@ def request_body(kwargs):
             raise ValueError('reasoning supports enabled and effort only')
         if 'enabled' in reasoning and type(reasoning['enabled']) is not bool:
             raise ValueError('reasoning.enabled must be boolean')
-        from agent.reasoning_effort import clamp_effort
+        from app.runtime.reasoning_effort import clamp_effort
         effort = clamp_effort(reasoning.get('effort'), ('none', 'low', 'medium', 'high', 'xhigh', 'max'))
         if effort not in (None, 'none', 'low', 'medium', 'high', 'xhigh', 'max'):
             raise ValueError('Unsupported native reasoning effort')

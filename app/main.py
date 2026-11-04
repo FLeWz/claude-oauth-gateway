@@ -58,20 +58,55 @@ async def list_models(authenticated: bool = Depends(authenticate)):
     }
 
 
+def build_extra_body(request: ChatCompletionRequest) -> dict:
+    """Turn OpenAI `reasoning_effort` into the SDK's `reasoning` option.
+
+    Thinking text is only returned (as `reasoning_content`) when reasoning is enabled, so it is
+    on by default. `reasoning_effort: "none"` turns it off. An explicit extra_body.reasoning wins.
+    """
+    extra = dict(request.extra_body or {})
+
+    if "reasoning" in extra:
+        return extra
+
+    effort = (request.reasoning_effort or "").strip().lower()
+
+    if effort == "none":
+        extra["reasoning"] = {"enabled": False, "effort": "none"}
+    else:
+        reasoning: dict = {"enabled": True}
+        if effort:
+            reasoning["effort"] = "low" if effort == "minimal" else effort
+        extra["reasoning"] = reasoning
+
+    return extra
+
+
 @app.post("/v1/chat/completions")
 async def chat_completions(
     request: ChatCompletionRequest, authenticated: bool = Depends(authenticate)
 ):
     if request.model not in settings.models:
-        raise HTTPException(status_code=404, detail=f"Unknown model: {request.model}")
+        # /v1/models advertises discovered ids (e.g. claude-sonnet-5-5[1m]); accept them too.
+        discovered = await asyncio.to_thread(runtime.models)
+        if request.model not in {model["id"] for model in discovered}:
+            raise HTTPException(status_code=404, detail=f"Unknown model: {request.model}")
 
     session_id = sessions.create()
 
     messages = [message.model_dump() for message in request.messages]
 
+    extra_body = build_extra_body(request)
+
     options = {
         "temperature": request.temperature,
         "max_tokens": request.max_tokens,
+        "tools": request.tools,
+        "tool_choice": request.tool_choice,
+        "top_p": request.top_p,
+        "stop": request.stop,
+        "extra_body": extra_body,
+        "response_format": request.response_format,
     }
 
     if request.stream:
@@ -89,7 +124,7 @@ async def chat_completions(
                     tool_choice=request.tool_choice,
                     top_p=request.top_p,
                     stop=request.stop,
-                    extra_body=request.extra_body,
+                    extra_body=extra_body,
                     response_format=request.response_format,
                 ):
                     chunk = {

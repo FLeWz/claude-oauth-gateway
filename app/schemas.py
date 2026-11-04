@@ -23,6 +23,7 @@ class ChatCompletionRequest(BaseModel):
     stop: Optional[Any] = None
     stream_options: Optional[dict] = None
     extra_body: Optional[dict] = None
+    reasoning_effort: Optional[str] = None
     response_format: Optional[dict] = None
 
 
