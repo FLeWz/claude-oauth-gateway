@@ -44,3 +44,6 @@ docker exec -it claude-oauth-gateway claude --version
 docker exec -it claude-oauth-gateway claude auth login
 
 docker exec -it claude-oauth-gateway claude auth status
+
+
+http://host.docker.internal:8765/v1
