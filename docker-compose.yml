@@ -1,0 +1,32 @@
+
+services:
+  claude-gateway:
+    build: .
+    container_name: claude-oauth-gateway
+
+    restart: unless-stopped
+
+    ports:
+      - "8765:8765"
+
+    env_file:
+      - .env
+
+    environment:
+      CLAUDE_WORKDIR: /app/claude-workspace
+      CLAUDE_CONFIG_DIR: /claude-config
+
+    volumes:
+      - ./data:/app/data
+      - ./claude-config:/claude-config
+      - ./claude-workspace:/app/claude-workspace
+
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8765/health')"
+      interval: 30s
+      timeout: 5s
+      retries: 3

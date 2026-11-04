@@ -1,0 +1,46 @@
+mkdir -p app/runtime/vendor/claude_directsdk
+
+git clone --depth 1 --filter=blob:none --sparse \
+  https://github.com/NousResearch/hermes-official-plugins.git \
+  /tmp/hermes-official-plugins
+
+cd /tmp/hermes-official-plugins
+git sparse-checkout set claude-subscription-directsdk
+
+cd ~/Downloads/claude-oauth-gateway
+
+cp /tmp/hermes-official-plugins/claude-subscription-directsdk/directsdk.py \
+   app/runtime/vendor/claude_directsdk/
+
+cp /tmp/hermes-official-plugins/claude-subscription-directsdk/admission.py \
+   app/runtime/vendor/claude_directsdk/
+
+cp /tmp/hermes-official-plugins/claude-subscription-directsdk/model_catalog.py \
+   app/runtime/vendor/claude_directsdk/
+
+cp /tmp/hermes-official-plugins/claude-subscription-directsdk/directsdk_setup.py \
+   app/runtime/vendor/claude_directsdk/
+
+cp /tmp/hermes-official-plugins/claude-subscription-directsdk/inert_mcp.py \
+   app/runtime/vendor/claude_directsdk/
+
+cp /tmp/hermes-official-plugins/claude-subscription-directsdk/LICENSE \
+   app/runtime/vendor/claude_directsdk/
+
+touch app/runtime/vendor/__init__.py
+touch app/runtime/vendor/claude_directsdk/__init__.py
+
+
+
+
+
+
+
+docker compose build
+docker compose up -d
+
+docker exec -it claude-oauth-gateway claude --version
+
+docker exec -it claude-oauth-gateway claude auth login
+
+docker exec -it claude-oauth-gateway claude auth status
