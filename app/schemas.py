@@ -1,8 +1,11 @@
 from typing import Optional, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ChatMessage(BaseModel):
+    # Keep tool_call_id, tool_calls, name, etc. so tool round-trips reach the runtime.
+    model_config = ConfigDict(extra="allow")
+
     role: str
     content: Any
 
